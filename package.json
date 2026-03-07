@@ -1,0 +1,17 @@
+{
+  "name": "jurisbridge",
+  "version": "1.0.0",
+  "description": "JurisBridge — AI-powered legal assistance platform with JurisPilot AI",
+  "scripts": {
+    "install-all": "cd server && npm install && cd ../client && npm install",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["legal-tech", "MERN", "AI", "JurisPilot"],
+  "author": "Pikashow206",
+  "license": "MIT"
+}
