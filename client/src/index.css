@@ -1,0 +1,364 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ========================
+   JURISBRIDGE — THEME SYSTEM
+   ======================== */
+
+@theme {
+  --color-primary: #1A3C6E;
+  --color-primary-light: #24508f;
+  --color-primary-dark: #0D1B2A;
+  --color-secondary: #C9A84C;
+  --color-secondary-light: #d4b96e;
+  --color-secondary-dark: #a8893a;
+  --color-accent: #C9A84C;
+  --color-muted: #8494A7;
+  --color-success: #2d8a5e;
+  --color-danger: #c0392b;
+  --color-warning: #d4a017;
+  --color-info: #2980b9;
+  --color-dark: #0D1B2A;
+  --color-light: #F4F1EC;
+  --color-card: #ffffff;
+  --color-border: #ddd6c9;
+
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ========================
+   BASE — LIGHT MODE (Default)
+   ======================== */
+
+:root {
+  --bg-base: #F4F1EC;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #F4F1EC;
+  --bg-subtle: rgba(26, 60, 110, 0.05);
+
+  --text-primary: #0D1B2A;
+  --text-secondary: #8494A7;
+  --text-muted: #a3b1c2;
+
+  --border-default: #ddd6c9;
+  --border-subtle: #ede8df;
+
+  --brand-primary: #1A3C6E;
+  --brand-primary-hover: #0D1B2A;
+  --brand-gold: #C9A84C;
+  --brand-gold-hover: #d4b96e;
+
+  --shadow-sm: 0 1px 3px rgba(13, 27, 42, 0.06);
+  --shadow-md: 0 4px 16px rgba(13, 27, 42, 0.08);
+  --shadow-lg: 0 8px 30px rgba(13, 27, 42, 0.1);
+}
+
+/* ========================
+   DARK MODE
+   ======================== */
+
+.dark {
+  --bg-base: #0B0F1A;
+  --bg-card: #111827;
+  --bg-elevated: #1A2236;
+  --bg-input: #1A2236;
+  --bg-hover: #1E293B;
+  --bg-subtle: rgba(201, 168, 76, 0.05);
+
+  --text-primary: #E2E8F0;
+  --text-secondary: #64748B;
+  --text-muted: #475569;
+
+  --border-default: #1E293B;
+  --border-subtle: #1A2236;
+
+  --brand-primary: #3B6CB5;
+  --brand-primary-hover: #4F83D1;
+  --brand-gold: #C9A84C;
+  --brand-gold-hover: #d4b96e;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* ========================
+   GLOBAL BASE STYLES
+   ======================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-primary) var(--bg-base);
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
+/* ========================
+   SCROLLBAR
+   ======================== */
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--text-secondary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
+
+/* ========================
+   GRADIENTS
+   ======================== */
+
+.gradient-primary { background: linear-gradient(135deg, #0D1B2A, #1A3C6E); }
+.gradient-hero { background: linear-gradient(160deg, #0D1B2A 0%, #1A3C6E 60%, #24508f 100%); }
+.gradient-gold { background: linear-gradient(135deg, #C9A84C, #d4b96e); }
+
+/* ========================
+   CARDS
+   ======================== */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ========================
+   BUTTONS
+   ======================== */
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary:hover {
+  background: var(--brand-primary-hover);
+  box-shadow: 0 4px 12px rgba(26, 60, 110, 0.3);
+}
+
+.btn-secondary {
+  background: var(--brand-gold);
+  color: #0D1B2A;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-secondary:hover {
+  background: var(--brand-gold-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--brand-primary);
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1.5px solid var(--border-default);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-outline:hover {
+  border-color: var(--brand-primary);
+  background: var(--bg-subtle);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ========================
+   FORM INPUTS
+   ======================== */
+
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border-default);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.1);
+}
+.input-field::placeholder {
+  color: var(--text-secondary);
+}
+
+.input-icon-wrapper {
+  position: relative;
+}
+.input-icon-wrapper .input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 1;
+}
+.input-icon-wrapper .input-field {
+  padding-left: 44px;
+}
+
+.input-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+/* ========================
+   STATUS BADGES
+   ======================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========================
+   CHAT BUBBLES
+   ======================== */
+
+.chat-bubble-user {
+  background: var(--brand-primary);
+  color: white;
+  border-radius: 16px 16px 4px 16px;
+}
+.chat-bubble-ai {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 16px 16px 16px 4px;
+}
+
+/* ========================
+   STAT CARD
+   ======================== */
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========================
+   TABLE STYLES
+   ======================== */
+
+.table-header {
+  background: var(--bg-hover);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
+
+/* ========================
+   LOADER
+   ======================== */
+
+.spinner {
+  border: 3px solid var(--border-default);
+  border-top: 3px solid var(--brand-primary);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========================
+   DARK MODE — SPECIFIC OVERRIDES
+   ======================== */
+
+.dark .gradient-hero {
+  background: linear-gradient(160deg, #060912 0%, #0B1526 60%, #111D35 100%);
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1A2236 inset;
+  -webkit-text-fill-color: #E2E8F0;
+  border-color: #1E293B;
+}
+
+/* Select dropdown dark mode */
+.dark select option {
+  background: #111827;
+  color: #E2E8F0;
+}
