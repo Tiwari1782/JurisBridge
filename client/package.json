@@ -4,10 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "build":"cd client && npm install && npm run build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
