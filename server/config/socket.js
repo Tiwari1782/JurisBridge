@@ -14,24 +14,21 @@ const initSocket = (server) => {
   io.on('connection', (socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
-    // Join a case room for lawyer-client chat
+    // ── Existing chat events ──
     socket.on('join_case', (caseId) => {
       socket.join(`case_${caseId}`);
       console.log(`📂 User joined case room: case_${caseId}`);
     });
 
-    // Leave a case room
     socket.on('leave_case', (caseId) => {
       socket.leave(`case_${caseId}`);
       console.log(`📂 User left case room: case_${caseId}`);
     });
 
-    // Handle real-time chat messages
     socket.on('send_message', (data) => {
       io.to(`case_${data.caseId}`).emit('receive_message', data);
     });
 
-    // Typing indicator
     socket.on('typing', (data) => {
       socket.to(`case_${data.caseId}`).emit('user_typing', {
         userId: data.userId,
@@ -39,10 +36,41 @@ const initSocket = (server) => {
       });
     });
 
-    // JurisPilot AI mini-widget: join personal AI room
     socket.on('join_ai_room', (userId) => {
       socket.join(`ai_${userId}`);
       console.log(`🤖 User joined JurisPilot room: ai_${userId}`);
+    });
+
+    // ── NEW: Video call signaling events ──
+
+    // Join a video room
+    socket.on('join_video', (caseId) => {
+      socket.join(`video_${caseId}`);
+      // Notify the other person in the room
+      socket.to(`video_${caseId}`).emit('user_joined_video', socket.id);
+      console.log(`📹 User ${socket.id} joined video room: video_${caseId}`);
+    });
+
+    // Leave video room
+    socket.on('leave_video', (caseId) => {
+      socket.to(`video_${caseId}`).emit('user_left_video', socket.id);
+      socket.leave(`video_${caseId}`);
+      console.log(`📹 User ${socket.id} left video room: video_${caseId}`);
+    });
+
+    // Relay WebRTC offer
+    socket.on('video_offer', ({ caseId, offer }) => {
+      socket.to(`video_${caseId}`).emit('video_offer', { offer, from: socket.id });
+    });
+
+    // Relay WebRTC answer
+    socket.on('video_answer', ({ caseId, answer }) => {
+      socket.to(`video_${caseId}`).emit('video_answer', { answer, from: socket.id });
+    });
+
+    // Relay ICE candidates
+    socket.on('ice_candidate', ({ caseId, candidate }) => {
+      socket.to(`video_${caseId}`).emit('ice_candidate', { candidate, from: socket.id });
     });
 
     socket.on('disconnect', () => {
