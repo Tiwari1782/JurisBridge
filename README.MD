@@ -692,7 +692,6 @@ This project is open source and available under the [MIT License](LICENSE).
 [![Portfolio](https://img.shields.io/badge/Portfolio-Visit-00d4ff?style=for-the-badge&labelColor=0D1B2A)](https://github.com/Tiwari1782/PORTFOLIO)
 [![GitHub](https://img.shields.io/badge/GitHub-Tiwari1782-181717?style=for-the-badge&logo=github)](https://github.com/Tiwari1782)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/prakash-tiwari-8900bb2b2/)
-[![LeetCode](https://img.shields.io/badge/LeetCode-pRaKaSh1782-FFA116?style=for-the-badge&logo=leetcode)](https://leetcode.com/u/pRaKaSh1782/)
 
 </div>
 
