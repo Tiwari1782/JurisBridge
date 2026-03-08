@@ -5,6 +5,7 @@ import api from '../services/api';
 import useAuthStore from '../store/authStore';
 import PageHeader from '../components/common/PageHeader';
 import Loader from '../components/common/Loader';
+import PaymentButton from '../components/payment/PaymentButton';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 14 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
@@ -47,9 +48,25 @@ const CaseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
 
+  // ── NEW: Resolve modal state ──
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [resolution, setResolution] = useState('');
+  const [resolving, setResolving] = useState(false);
+
+  // ── NEW: Payment state ──
+  const [paymentDone, setPaymentDone] = useState(false);
+  const [payments, setPayments] = useState([]);
+
   useEffect(() => {
     fetchCase();
   }, [id]);
+
+  // ── NEW: Fetch payments when case is resolved ──
+  useEffect(() => {
+    if (caseData?.status === 'resolved' || caseData?.status === 'closed') {
+      fetchPayments();
+    }
+  }, [caseData?.status]);
 
   const fetchCase = async () => {
     try {
@@ -60,6 +77,46 @@ const CaseDetail = () => {
       navigate('/cases');
     }
     setLoading(false);
+  };
+
+  // ── NEW: Fetch payments for this case ──
+  const fetchPayments = async () => {
+    try {
+      const { data } = await api.get(`/payments/case/${id}`);
+      const casePayments = data.data || [];
+      setPayments(casePayments);
+      // Check if any completed payment exists
+      const hasCompleted = casePayments.some((p) => p.status === 'completed');
+      setPaymentDone(hasCompleted);
+    } catch (err) {
+      /* silent */
+    }
+  };
+
+  // ── NEW: Handle resolve case (Lawyer) ──
+  const handleResolveCase = async () => {
+    if (!resolution.trim()) {
+      toast.error('Please provide a resolution summary');
+      return;
+    }
+    setResolving(true);
+    try {
+      const { data } = await api.put(`/cases/${id}/resolve`, { resolution });
+      toast.success(data.message || 'Case resolved successfully!');
+      setCaseData(data.data);
+      setShowResolveModal(false);
+      setResolution('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to resolve case');
+    }
+    setResolving(false);
+  };
+
+  // ── NEW: Handle payment success ──
+  const handlePaymentSuccess = (paymentData) => {
+    setPaymentDone(true);
+    setPayments((prev) => [paymentData, ...prev]);
+    fetchCase(); // Refresh case data
   };
 
   if (loading) return <Loader fullScreen text="Loading case..." />;
@@ -89,6 +146,10 @@ const CaseDetail = () => {
 
   const isClient = !isLawyer();
   const canChat = caseData.status === 'active' || caseData.status === 'in_progress';
+
+  // ── NEW: Derived booleans ──
+  const canResolve = isLawyer() && (caseData.status === 'active' || caseData.status === 'in_progress');
+  const showPaymentButton = isClient && caseData.status === 'resolved' && !paymentDone && lawyerFee > 0;
 
   const tabs = [
     { key: 'details', label: 'Details', icon: 'fa-file-lines' },
@@ -157,6 +218,20 @@ const CaseDetail = () => {
                   </Link>
                 </>
               )}
+
+              {/* ── NEW: Resolve Case Button (Lawyer only) ── */}
+              {canResolve && (
+                <button onClick={() => setShowResolveModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all hover:shadow-lg hover:-translate-y-0.5"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(201,168,76,0.05) 100%)',
+                    borderColor: '#C9A84C',
+                    color: '#C9A84C',
+                  }}>
+                  <i className="fas fa-check-double text-[10px]"></i>Resolve Case
+                </button>
+              )}
+
               {isClient && caseData.status === 'pending' && !hasLawyer && (
                 <Link to={`/lawyers`} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all"
                   style={{ borderColor: '#C9A84C', color: '#C9A84C', background: 'rgba(201,168,76,0.04)' }}>
@@ -192,6 +267,78 @@ const CaseDetail = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+
+            {/* ── NEW: Gold Payment Banner (Client sees this when case is resolved) ── */}
+            {showPaymentButton && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+                className="rounded-2xl border-2 p-6 relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.02) 50%, rgba(13,27,42,0.03) 100%)',
+                  borderColor: '#C9A84C',
+                  boxShadow: '0 4px 24px rgba(201,168,76,0.15), 0 0 0 1px rgba(201,168,76,0.1)',
+                }}>
+                {/* Gold shimmer accent */}
+                <div className="absolute top-0 left-0 w-full h-1 rounded-t-2xl" style={{ background: 'linear-gradient(90deg, #C9A84C, #d4b96e, #C9A84C)' }}></div>
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-10" style={{ background: '#C9A84C' }}></div>
+
+                <div className="relative z-10 flex flex-col sm:flex-row items-center gap-5">
+                  {/* Icon */}
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #C9A84C 0%, #d4b96e 100%)', boxShadow: '0 4px 16px rgba(201,168,76,0.4)' }}>
+                    <i className="fas fa-indian-rupee-sign text-2xl text-white"></i>
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex-1 text-center sm:text-left">
+                    <h3 className="text-lg font-heading font-bold" style={{ color: '#C9A84C' }}>
+                      🎉 Case Resolved — Payment Due
+                    </h3>
+                    <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      Your lawyer <strong style={{ color: 'var(--text-primary)' }}>{lawyerName}</strong> has resolved your case.
+                      Please complete the consultation fee payment securely via Razorpay.
+                    </p>
+                    <p className="text-xs mt-2 flex items-center gap-1.5 justify-center sm:justify-start" style={{ color: 'var(--text-muted)' }}>
+                      <i className="fas fa-shield-halved text-[9px]" style={{ color: '#2d8a5e' }}></i>
+                      Secured by Razorpay • 256-bit encryption
+                    </p>
+                  </div>
+
+                  {/* Payment Button — GOLD */}
+                  <div className="flex-shrink-0">
+                    <PaymentButton
+                      caseId={id}
+                      amount={lawyerFee}
+                      lawyerName={lawyerName}
+                      onSuccess={handlePaymentSuccess}
+                      className="px-8 py-4 rounded-2xl text-sm font-bold text-[#0D1B2A] shadow-xl hover:shadow-2xl hover:-translate-y-1"
+                      style={{
+                        background: 'linear-gradient(135deg, #C9A84C 0%, #d4b96e 50%, #C9A84C 100%)',
+                        backgroundSize: '200% 200%',
+                        animation: 'goldShimmer 3s ease-in-out infinite',
+                        boxShadow: '0 6px 24px rgba(201,168,76,0.5), 0 0 0 2px rgba(201,168,76,0.2)',
+                      }}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── NEW: Payment Success Banner ── */}
+            {isClient && paymentDone && caseData.status === 'resolved' && (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
+                className="rounded-2xl border p-5 flex items-center gap-4"
+                style={{ background: 'rgba(45,138,94,0.04)', borderColor: 'rgba(45,138,94,0.2)' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(45,138,94,0.1)' }}>
+                  <i className="fas fa-check-circle text-xl" style={{ color: '#2d8a5e' }}></i>
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#2d8a5e' }}>Payment Completed ✓</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                    ₹{lawyerFee.toLocaleString('en-IN')} paid successfully to {lawyerName}. Thank you!
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             {/* Details Tab */}
             {activeTab === 'details' && (
@@ -376,6 +523,61 @@ const CaseDetail = () => {
           {/* ====== SIDEBAR ====== */}
           <div className="space-y-5">
 
+            {/* ── NEW: Payment Card in Sidebar (when resolved & client) ── */}
+            {isClient && caseData.status === 'resolved' && (
+              <div className="rounded-2xl border-2 overflow-hidden"
+                style={{
+                  borderColor: paymentDone ? '#2d8a5e' : '#C9A84C',
+                  background: 'var(--bg-card)',
+                  boxShadow: paymentDone ? '0 0 16px rgba(45,138,94,0.1)' : '0 0 16px rgba(201,168,76,0.15)',
+                }}>
+                <div className="px-5 py-3 flex items-center gap-2"
+                  style={{
+                    background: paymentDone ? 'rgba(45,138,94,0.06)' : 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%)',
+                    borderBottom: `1px solid ${paymentDone ? 'rgba(45,138,94,0.2)' : 'rgba(201,168,76,0.2)'}`,
+                  }}>
+                  <i className={`fas ${paymentDone ? 'fa-check-circle' : 'fa-indian-rupee-sign'} text-[10px]`}
+                    style={{ color: paymentDone ? '#2d8a5e' : '#C9A84C' }}></i>
+                  <h3 className="text-xs font-bold uppercase tracking-wider"
+                    style={{ color: paymentDone ? '#2d8a5e' : '#C9A84C' }}>
+                    {paymentDone ? 'Payment Complete' : 'Payment Required'}
+                  </h3>
+                </div>
+                <div className="p-5">
+                  {paymentDone ? (
+                    <div className="text-center py-2">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(45,138,94,0.1)' }}>
+                        <i className="fas fa-receipt text-xl" style={{ color: '#2d8a5e' }}></i>
+                      </div>
+                      <p className="text-sm font-bold" style={{ color: '#2d8a5e' }}>₹{lawyerFee.toLocaleString('en-IN')} Paid</p>
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Thank you for your payment</p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-2">
+                      <p className="text-2xl font-heading font-bold mb-1" style={{ color: '#C9A84C' }}>
+                        ₹{lawyerFee.toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-[10px] mb-4" style={{ color: 'var(--text-muted)' }}>Consultation fee for {lawyerName}</p>
+                      <PaymentButton
+                        caseId={id}
+                        amount={lawyerFee}
+                        lawyerName={lawyerName}
+                        onSuccess={handlePaymentSuccess}
+                        className="w-full px-5 py-3.5 rounded-xl text-sm font-bold text-[#0D1B2A]"
+                        style={{
+                          background: 'linear-gradient(135deg, #C9A84C 0%, #d4b96e 50%, #C9A84C 100%)',
+                          boxShadow: '0 4px 16px rgba(201,168,76,0.4)',
+                        }}
+                      />
+                      <p className="text-[9px] mt-3 flex items-center justify-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                        <i className="fas fa-lock text-[7px]"></i>Secured by Razorpay
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Assigned Lawyer Card */}
             <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
               <div className="px-5 py-3 flex items-center gap-2" style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-default)' }}>
@@ -557,11 +759,124 @@ const CaseDetail = () => {
                   style={{ borderColor: '#2d8a5e', color: '#2d8a5e', background: 'rgba(45,138,94,0.04)' }}>
                   <i className="fas fa-video text-[10px]"></i>Start Video Call
                 </Link>
+
+                {/* ── NEW: Resolve button in Quick Actions (Lawyer) ── */}
+                {canResolve && (
+                  <button onClick={() => setShowResolveModal(true)}
+                    className="w-full inline-flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold border-2 transition-all hover:shadow-lg hover:-translate-y-0.5"
+                    style={{
+                      borderColor: '#C9A84C',
+                      color: '#C9A84C',
+                      background: 'rgba(201,168,76,0.04)',
+                    }}>
+                    <i className="fas fa-check-double text-[10px]"></i>Mark as Resolved
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* ── NEW: RESOLVE CASE MODAL (Lawyer) ── */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showResolveModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowResolveModal(false)}>
+
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="w-full max-w-lg rounded-2xl border overflow-hidden"
+              style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}
+              onClick={(e) => e.stopPropagation()}>
+
+              {/* Modal Header — Gold accent */}
+              <div className="px-6 py-4 flex items-center gap-3"
+                style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(201,168,76,0.03) 100%)', borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #C9A84C, #d4b96e)' }}>
+                  <i className="fas fa-check-double text-white text-sm"></i>
+                </div>
+                <div>
+                  <h2 className="text-base font-heading font-bold" style={{ color: 'var(--text-primary)' }}>Resolve Case</h2>
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Provide a resolution summary for the client</p>
+                </div>
+                <button onClick={() => setShowResolveModal(false)} className="ml-auto w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-[var(--bg-hover)]"
+                  style={{ color: 'var(--text-muted)' }}>
+                  <i className="fas fa-xmark text-sm"></i>
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider mb-2 block" style={{ color: 'var(--text-secondary)' }}>
+                    Resolution Summary <span style={{ color: '#c0392b' }}>*</span>
+                  </label>
+                  <textarea
+                    value={resolution}
+                    onChange={(e) => setResolution(e.target.value)}
+                    placeholder="Describe how the case was resolved, any agreements made, next steps for the client..."
+                    rows={5}
+                    className="w-full px-4 py-3 rounded-xl border text-sm resize-none transition-all focus:outline-none"
+                    style={{
+                      background: 'var(--bg-base)',
+                      borderColor: resolution.trim() ? '#C9A84C' : 'var(--border-default)',
+                      color: 'var(--text-primary)',
+                      boxShadow: resolution.trim() ? '0 0 0 3px rgba(201,168,76,0.1)' : 'none',
+                    }}
+                  />
+                  <p className="text-[10px] mt-1.5 text-right" style={{ color: resolution.length > 2500 ? '#c0392b' : 'var(--text-muted)' }}>
+                    {resolution.length}/3000
+                  </p>
+                </div>
+
+                {/* Info tip */}
+                <div className="flex items-start gap-2.5 p-3 rounded-xl" style={{ background: 'rgba(201,168,76,0.04)', border: '1px solid rgba(201,168,76,0.1)' }}>
+                  <i className="fas fa-info-circle text-[10px] mt-0.5" style={{ color: '#C9A84C' }}></i>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    Once resolved, the client will be prompted to complete the <strong style={{ color: '#C9A84C' }}>₹{lawyerFee.toLocaleString('en-IN')}</strong> consultation fee payment via Razorpay.
+                  </p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 flex items-center justify-end gap-3" style={{ borderTop: '1px solid var(--border-default)', background: 'var(--bg-hover)' }}>
+                <button onClick={() => setShowResolveModal(false)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold border transition-all"
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)', background: 'var(--bg-card)' }}>
+                  Cancel
+                </button>
+                <button onClick={handleResolveCase} disabled={resolving || !resolution.trim()}
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-[#0D1B2A] transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background: 'linear-gradient(135deg, #C9A84C 0%, #d4b96e 100%)',
+                    boxShadow: '0 4px 12px rgba(201,168,76,0.3)',
+                  }}>
+                  {resolving ? (
+                    <><div className="w-3.5 h-3.5 border-2 border-[#0D1B2A]/30 border-t-[#0D1B2A] rounded-full animate-spin inline-block mr-2"></div>Resolving...</>
+                  ) : (
+                    <><i className="fas fa-check-double mr-2 text-[10px]"></i>Resolve Case</>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: Gold shimmer animation ── */}
+      <style>{`
+        @keyframes goldShimmer {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </div>
   );
 };
