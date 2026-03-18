@@ -7,7 +7,7 @@
 **AI-Powered Legal Assistance Platform with JurisPilot AI, Real-Time Chat, Document Analysis & Lawyer Marketplace**
 
 <a href="https://juris-bridge-my3w.vercel.app/" target="_blank">
-  <img src="https://img.shields.io/badge/%20Live%20Demo-Visit%20JurisBridge-00d4ff?style=for-the-badge&labelColor=0D1B2A" alt="Live Demo" />
+  <img src="https://img.shields.io/badge/%20Live%20Demo-Visit%20JurisBridge-00d4ff?style=for-the-badge&labelColor=0D1B2A" alt="Liveee Demo" />
 </a>
 
 [![GitHub](https://img.shields.io/badge/GitHub-Tiwari1782-181717?style=for-the-badge&logo=github)](https://github.com/Tiwari1782)
